@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Money Manager — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body>
+  <div class="mode-banner" id="modeBanner" data-mode="">checking mode…</div>
+
+  <header class="topbar">
+    <div class="inner">
+      <div class="brand">Money Manager <small>ledger</small></div>
+      <div class="user">
+        <span>Signed in as <b id="whoami">…</b></span>
+        <button class="link-btn" id="logoutBtn">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- left rail: this month's summary -->
+    <aside class="summary">
+      <div class="eyebrow" id="monthLabel">This month</div>
+      <h2>Balance</h2>
+      <div class="balance" id="balance">—</div>
+      <div class="balance-label">income minus expenses, this month</div>
+      <div class="summary-line">
+        <span>Income</span>
+        <span class="amt income" id="incomeTotal">—</span>
+      </div>
+      <div class="summary-line">
+        <span>Expenses</span>
+        <span class="amt expense" id="expenseTotal">—</span>
+      </div>
+    </aside>
+
+    <!-- main: add form + ledger -->
+    <main>
+      <div class="add-card">
+        <h3>Add transaction</h3>
+        <div class="notice error hidden" id="formNotice"></div>
+        <form id="txForm">
+          <div class="add-grid">
+            <div class="full">
+              <div class="seg" role="group" aria-label="Transaction type">
+                <button type="button" class="expense" data-type="expense" aria-pressed="true">Expense</button>
+                <button type="button" class="income" data-type="income" aria-pressed="false">Income</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="amount">Amount</label>
+              <input id="amount" type="number" step="0.01" min="0" inputmode="decimal" required />
+            </div>
+            <div class="field">
+              <label for="category">Category</label>
+              <input id="category" list="catlist" required placeholder="e.g. Groceries" />
+              <datalist id="catlist">
+                <option>Allowance</option>
+                <option>Restaurant</option>
+                <option>Utilities</option>
+                <option>Transport</option>
+                <option>Subscriptions</option>
+              </datalist>
+            </div>
+            <div class="field">
+              <label for="date">Date</label>
+              <input id="date" type="date" required />
+            </div>
+            <div class="field">
+              <label for="note">Note <span style="color:var(--muted)">(optional)</span></label>
+              <input id="note" maxlength="500" placeholder="e.g. weekly shop" />
+            </div>
+            <div class="full">
+              <button class="btn-primary" type="submit" style="width:auto;padding:11px 24px;">Add transaction</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="ledger-head">
+        <h2>Ledger</h2>
+        <span class="count" id="txCount"></span>
+      </div>
+      <div id="ledger"></div>
+    </main>
+  </div>
+
+  <!-- security mode toggle: left = insecure, right = secure -->
+  <div class="mode-switch" id="modeSwitch" data-mode="insecure">
+    <button class="mode-switch__track" id="modeSwitchBtn" type="button" role="switch" aria-checked="false"
+      aria-label="Security mode" title="Switch security mode — reloads this mode's demo data and signs you out">
+      <span class="mode-switch__knob">
+        <svg class="lock lock-unlocked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="9" rx="1.6" />
+          <path d="M8 11V8a4 4 0 0 1 7.4-2.1" />
+        </svg>
+        <svg class="lock lock-locked" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="9" rx="1.6" />
+          <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+        </svg>
+      </span>
+    </button>
+    <span class="mode-switch__label" id="modeSwitchLabel">Insecure</span>
+  </div>
+
+  <script src="/static/app.js"></script>
+  <script>
+    Dashboard.init();
+  </script>
+</body>
+
+</html>
