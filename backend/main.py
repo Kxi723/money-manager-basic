@@ -243,6 +243,46 @@ def delete_transaction(tx_id: int, user: dict = Depends(current_user)):
     return {"ok": True}
 
 
+@app.put("/api/transactions/{tx_id}")
+def update_transaction(tx_id: int, tx: Transaction, user: dict = Depends(current_user)):
+    if tx.type not in ("income", "expense"):
+        raise HTTPException(status_code=400, detail="type must be income or expense")
+    tx_date = tx.date or date.today().isoformat()
+
+    with db() as conn:
+        # Only update the transaction if it belongs to the current user
+        if config.is_secure():
+            cur = conn.execute(
+                "UPDATE transactions SET amount=?, type=?, category=?, note=?, date=? WHERE id = ? AND user_id = ?", (
+                    security.encrypt_field(str(tx.amount)),
+                    tx.type,
+                    tx.category,
+                    security.encrypt_field(tx.note),
+                    tx_date,
+                    tx_id,
+                    user["id"],
+                ),
+            )
+
+        else:
+            # Can edit anyone's row.
+            cur = conn.execute(
+                "UPDATE transactions SET amount=?, type=?, category=?, note=?, date=? WHERE id = ?", (
+                    security.encrypt_field(str(tx.amount)),
+                    tx.type,
+                    tx.category,
+                    security.encrypt_field(tx.note),
+                    tx_date,
+                    tx_id,
+                ),
+            )
+
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        row = conn.execute("SELECT * FROM transactions WHERE id = ?", (tx_id,)).fetchone()
+    return _row_to_json(row)
+
+
 @app.get("/api/summary")
 def summary(user: dict = Depends(current_user)):
     """Totals for the current calendar month: income, expense, balance."""
