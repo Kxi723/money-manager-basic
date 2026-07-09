@@ -198,7 +198,7 @@ def get_transaction(tx_id: int, user: dict = Depends(current_user)):
 
 
 class Transaction(BaseModel):
-    amount: float
+    amount: float = Field(gt=0, le=1_000_000)
     type: str
     category: str = Field(min_length=1, max_length=64)
     note: str = Field(default="", max_length=500)
