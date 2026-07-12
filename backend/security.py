@@ -53,6 +53,19 @@ def verify_password(plain: str, stored: str) -> bool:
     return stored == "sha1$" + hashlib.sha1(plain.encode()).hexdigest()
 
 
+def password_error(password: str) -> str | None:
+    if not config.is_secure():
+        return None
+
+    if len(password) < 8:
+        return "Password must be at least 8 characters"
+    if not any(c.isupper() for c in password):
+        return "Password must contain an uppercase letter"
+    if not any(c.isdigit() for c in password):
+        return "Password must contain a number"
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Session tokens
 # ---------------------------------------------------------------------------

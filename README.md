@@ -18,8 +18,8 @@ insecure token isn't valid in secure mode, which is itself part of the lesson.
 ## The two flaws (and fixes)
 
 **Flaw 1 — Broken access control (IDOR) + weak auth**
-- *Insecure:* records fetched/deleted by client-supplied `id` / `?user_id=` with no ownership
-  check; passwords as bare unsalted **SHA-1**; no login rate limiting.
+- *Insecure:* records fetched / edited / deleted by client-supplied `id` / `?user_id=` with no
+  ownership check; passwords as bare unsalted **SHA-1**; no login rate limiting.
 - *Secure:* every query scoped `WHERE user_id = <token user>` (foreign row → **404**);
   **Argon2id** passwords; **signed JWT** sessions; lockout after 5 failed logins.
 
@@ -29,6 +29,14 @@ insecure token isn't valid in secure mode, which is itself part of the lesson.
 - *Secure:* `amount` / `note` encrypted with **AES-256-GCM** (key from `AES_KEY`) before write.
   TLS and at-rest encryption are complementary: TLS protects data in transit, field encryption
   keeps a stolen `.db` file unreadable.
+
+### Secondary flaws (also insecure → fixed in secure)
+
+- **No password policy:** *insecure* accepts any password; *secure* requires 8+ characters with
+  an uppercase letter and a digit at registration (existing/seeded accounts still log in).
+- **Client-side-only input validation:** *insecure* trusts the client — the transaction amount
+  is checked only in the frontend, so a request bypassing it (curl / DevTools) can store zero,
+  negative, or absurdly large values; *secure* validates `0 < amount ≤ 1,000,000` on the server.
 
 ## Run it
 

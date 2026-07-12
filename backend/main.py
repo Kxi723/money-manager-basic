@@ -117,6 +117,10 @@ class User(BaseModel):
 
 @app.post("/api/register")
 def register(account: User):
+    # Insecure: any password allowed. Secure: enforce the password policy.
+    pw_error = security.password_error(account.password)
+    if pw_error:
+        raise HTTPException(status_code=400, detail=pw_error)
     with db() as conn:
         # Skip duplicate username
         exists = conn.execute("SELECT 1 FROM users WHERE username = ?", (account.username,)).fetchone()
@@ -198,17 +202,25 @@ def get_transaction(tx_id: int, user: dict = Depends(current_user)):
 
 
 class Transaction(BaseModel):
-    amount: float = Field(gt=0, le=1_000_000)
+    amount: float
     type: str
     category: str = Field(min_length=1, max_length=64)
     note: str = Field(default="", max_length=500)
     date: str | None = None
 
 
+def check_amount(amount: float) -> None:
+    # Insecure keeps the flaw: no server-side amount check, so a client bypassing the
+    # frontend can send zero/negative/huge values. Secure validates on the server.
+    if config.is_secure() and not (0 < amount <= 1_000_000):
+        raise HTTPException(status_code=400, detail="amount must be between 0 and 1,000,000")
+
+
 @app.post("/api/transactions", status_code=201)
 def create_transaction(tx: Transaction, user: dict = Depends(current_user)):
     if tx.type not in ("income", "expense"):
         raise HTTPException(status_code=400, detail="type must be income or expense")
+    check_amount(tx.amount)
     tx_date = tx.date or date.today().isoformat()
 
     with db() as conn:
@@ -247,6 +259,7 @@ def delete_transaction(tx_id: int, user: dict = Depends(current_user)):
 def update_transaction(tx_id: int, tx: Transaction, user: dict = Depends(current_user)):
     if tx.type not in ("income", "expense"):
         raise HTTPException(status_code=400, detail="type must be income or expense")
+    check_amount(tx.amount)
     tx_date = tx.date or date.today().isoformat()
 
     with db() as conn:
